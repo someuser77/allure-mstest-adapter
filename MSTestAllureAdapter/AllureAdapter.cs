@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AllureCSharpCommons.AllureModel;
+using System.IO;
 
 namespace MSTestAllureAdapter
 {
@@ -13,6 +14,18 @@ namespace MSTestAllureAdapter
     /// </summary>
     public class AllureAdapter
     {
+        const string BYTE_STREAM_MIME_TYPE = "application/octet-stream";
+        
+        private static readonly Dictionary<string, string> mMimeTypes = new Dictionary<string, string>
+        {
+            {"txt", "text/plain"},
+            {"xml", "application/xml"},
+            {"html", "text/html"},
+            {"png", "image/png"},
+            {"jpg", "image/jpeg"},
+            {"json", "application/json"},
+        };
+        
         private static readonly string EMPTY_SUITE_CATEGORY_NAME = "NO_CATEGORY";
         
         static AllureAdapter()
@@ -70,13 +83,13 @@ namespace MSTestAllureAdapter
                     {
                         if (testResult.InnerTests == null || !testResult.InnerTests.Any())
                         {
-                            HandleAllureTestCaseResult(suitUid, testResult);
+                            HandleAllureTestCase(suitUid, testResult);
                         }
                         else 
                         {
                             foreach (MSTestResult innerTestResult in testResult.InnerTests)
                             {
-                                HandleAllureTestCaseResult(suitUid, innerTestResult);
+                                HandleAllureTestCase(suitUid, innerTestResult);
                             }
                         }
                     }
@@ -90,13 +103,33 @@ namespace MSTestAllureAdapter
             }
         }
         
-        private void HandleAllureTestCaseResult(string suitUid, MSTestResult testResult)
+        private void HandleAllureTestCase(string suitUid, MSTestResult testResult)
         {
             TestStarted(suitUid, testResult);
             
             HandleTestResult(testResult);
             
+            HandleAttachments(testResult);
+            
             TestFinished(testResult);
+        }
+        
+        protected virtual void HandleAttachments(MSTestResult testResult)
+        {
+            foreach (string attachmentPath in testResult.ResultFiles)
+            {
+                byte[] buffer = File.ReadAllBytes(attachmentPath);
+                string title = Path.GetFileName(attachmentPath);
+                
+                string extension = Path.GetExtension(attachmentPath).TrimStart('.');
+                string type;
+                if (!mMimeTypes.TryGetValue(extension, out type))
+                {
+                    type = BYTE_STREAM_MIME_TYPE;           
+                }
+                    
+                Allure.Lifecycle.Fire(new MakeAttachmentEvent(buffer, title, type));
+            }
         }
 
         private IDictionary<string, ICollection<MSTestResult>> CreateSuitToTestsMap(IEnumerable<MSTestResult> testResults )

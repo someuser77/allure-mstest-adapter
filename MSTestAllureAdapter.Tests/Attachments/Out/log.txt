@@ -1,0 +1,3 @@
+﻿0    [main] INFO  MyApp  - Entering application.
+36   [main] DEBUG Com.Foo.Bar  - Did it again!
+51   [main] INFO  MyApp  - Exiting application.

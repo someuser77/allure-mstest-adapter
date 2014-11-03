@@ -32,7 +32,11 @@ namespace MSTestAllureAdapter
 	public class MSTestResult
 	{
         private IEnumerable<string> mSuits;
-
+        
+        private bool mDoneAddingResultFiles = false;
+        
+        private ICollection<string> mResultFiles = null;
+        
         /// <summary>
         /// Copy constructor.
         /// </summary>
@@ -43,6 +47,10 @@ namespace MSTestAllureAdapter
             Owner = other.Owner;
             ErrorInfo = other.ErrorInfo; // ErrorInfo is immutable
             Description = other.Description;
+            
+            mResultFiles = new LinkedList<string>(other.ResultFiles);
+            
+            mDoneAddingResultFiles = true;
         }
 
         /// <summary>
@@ -74,6 +82,8 @@ namespace MSTestAllureAdapter
             }
 
             InnerTests = results;
+                    
+            mResultFiles = new LinkedList<string>();
 		}
 
         public MSTestResult(string name, TestOutcome outcome, DateTime start, DateTime end, string[] suits) 
@@ -124,7 +134,23 @@ namespace MSTestAllureAdapter
         public string Description { get; set; }
 
         public IEnumerable<MSTestResult> InnerTests { get; private set; }
+                
+        public IEnumerable<string> ResultFiles { get { return mResultFiles; } }
 
+        public void AddResultFile(string file)
+        {
+            if (mDoneAddingResultFiles)
+                throw new InvalidOperationException("DoneAddingResultFiles was called and no result files should be added.");
+            
+            mResultFiles.Add(file);
+        }
+        
+        public void DoneAddingResultFiles()
+        {
+            
+            mDoneAddingResultFiles = true;
+        }
+        
         public MSTestResult Clone()
         {
             return new MSTestResult(this);

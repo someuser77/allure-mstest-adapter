@@ -37,6 +37,14 @@ namespace MSTestAllureAdapter.Tests
             ExpectedTestsResultsMap["CSVDataDrivenTest0"].Owner = "Owner3";
             ExpectedTestsResultsMap["CSVDataDrivenTest1"].Owner = "Owner3";
             ExpectedTestsResultsMap["CSVDataDrivenTest2"].Owner = "Owner3";
+
+            string folder = "Attachments";
+            
+            ExpectedTestsResultsMap["TestMethod_With_One_Missing_And_One_present_Result_File"].AddResultFile(Path.Combine(folder, "Out", "log.txt"));
+            ExpectedTestsResultsMap["TestMethod_With_Multiple_Result_Files"].AddResultFile(Path.Combine(folder, "Out", "log.txt"));
+            ExpectedTestsResultsMap["TestMethod_With_Multiple_Result_Files"].AddResultFile(Path.Combine(folder, "Out", "apple-256266_640.jpg"));
+            
+            
         }
 
         private IDictionary<string, MSTestResult> CreateMap(IEnumerable<MSTestResult> testResults)

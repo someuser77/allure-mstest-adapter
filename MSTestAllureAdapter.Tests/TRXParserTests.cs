@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using MSTestAllureAdapter.TestProviders;
 
 namespace MSTestAllureAdapter.Tests
 {
@@ -27,6 +28,33 @@ namespace MSTestAllureAdapter.Tests
         {
             Assert.AreEqual(ExpectedTestsResultsMap.Values.EnumerateTestResults().Count(), mTestResults.Count());
         }
+        
+        [Test]
+        public void SingleResultFileFound()
+        {
+            string testName = "TestMethod_With_One_Missing_And_One_present_Result_File"; 
+            IEnumerable<string> expected = ExpectedTestsResultsMap[testName].ResultFiles;
+            IEnumerable<string> actual = mTestResults.Where(_ => _.Name == testName).First().ResultFiles;
+            
+            EnumerableDiffResult result = EnumerableDiff(expected, actual);
+
+            Assert.AreEqual(0, result.TotalOff, result.Message);
+        }
+        
+        
+        [Test]
+        public void MultipleResultFilesFound()
+        {
+            string testName = "TestMethod_With_Multiple_Result_Files"; 
+            IEnumerable<string> expected = ExpectedTestsResultsMap[testName].ResultFiles;
+            IEnumerable<string> actual = mTestResults.Where(_ => _.Name == testName).First().ResultFiles;
+
+            EnumerableDiffResult result = EnumerableDiff(expected, actual);
+
+            Assert.AreEqual(0, result.TotalOff, result.Message);
+        }
+                
+                
 
         [Test]
         public void AllTestsWereFound()

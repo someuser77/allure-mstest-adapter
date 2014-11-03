@@ -7,7 +7,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Xml;
 
-namespace MSTestAllureAdapter
+namespace MSTestAllureAdapter.TestProviders
 {
     /// <summary>
     /// MSTest TRX parser.
@@ -18,6 +18,8 @@ namespace MSTestAllureAdapter
         // for aesthetic reasons the naming convention was violated.
         private static readonly XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
 
+        private string mDeploymentRoot;
+        
         /// <summary>
         /// Parses the test results from the supplied trx file.
         /// </summary>
@@ -26,6 +28,10 @@ namespace MSTestAllureAdapter
         public IEnumerable<MSTestResult> GetTestResults(string filePath)
         {
             XDocument doc = XDocument.Load(filePath);
+            
+            XElement settings = doc.Root.Element(ns + "TestSettings").Element(ns + "Deployment");
+
+            mDeploymentRoot = settings.Attribute("runDeploymentRoot").Value;
 
             IEnumerable<XElement> unitTests = doc.Descendants(ns + "UnitTest");
 
@@ -44,35 +50,12 @@ namespace MSTestAllureAdapter
             return result;
         }
 
-        private ErrorInfo ParseErrorInfo(XElement errorInfoXmlElement)
-        {
-            XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(new NameTable());
-            xmlNamespaceManager.AddNamespace("prefix", ns.NamespaceName);
-
-            errorInfoXmlElement = errorInfoXmlElement.Element(ns + "Output");
-            
-            XElement messageElement = errorInfoXmlElement.XPathSelectElement("prefix:ErrorInfo/prefix:Message", xmlNamespaceManager);
-            
-            string message = (messageElement != null) ? messageElement.Value : null;
-
-            XElement stackTraceElement = errorInfoXmlElement.XPathSelectElement("prefix:ErrorInfo/prefix:StackTrace", xmlNamespaceManager);
-            
-            string stackTrace = (stackTraceElement != null) ? stackTraceElement.Value : null;
-
-            XElement stdOutElement = errorInfoXmlElement.XPathSelectElement("prefix:StdOut", xmlNamespaceManager);
-            
-            string stdOut = (stdOutElement != null) ? stdOutElement.Value : null;
-
-            return new ErrorInfo(message, stackTrace, stdOut);
-        }
-
         private class UnitTestData
         {
             public string Name { get; set; }
             public string Owner { get; set; }
             public string Description { get; set; }
             public IEnumerable<string> Suits { get; set; }
-             
         }
         
         private MSTestResult CreateMSTestResult(XElement unitTest, XElement unitTestResult)
@@ -83,7 +66,7 @@ namespace MSTestAllureAdapter
             unitTestData.Description = GetDescription(unitTest);
             unitTestData.Suits = (from testCategory in unitTest.Descendants(ns + "TestCategoryItem")
                 select testCategory.GetSafeAttributeValue("TestCategory")).ToList<string>();
-            
+
             return CreateMSTestResultInternal(unitTestData, unitTestResult);
         }
         
@@ -121,6 +104,26 @@ namespace MSTestAllureAdapter
 
             testResult.Description = unitTestData.Description;
             
+            XElement resultFilesElement = unitTestResult.Element(ns + "ResultFiles");
+            
+            if (resultFilesElement != null)
+            {
+                IEnumerable<XElement> resultFileElements = resultFilesElement.Elements(ns + "ResultFile");    
+                    
+                foreach (XElement resultFileElement in resultFileElements)
+                {
+                    string fileName = GetFileName(resultFileElement.Attribute("path").Value);
+                            
+                    // Path.Combine is used because the attachment is assumed to be accessed on the same
+                    // platform the report was created on.
+                    string resultFile = Path.Combine(mDeploymentRoot, "Out", fileName);
+                    
+                    testResult.AddResultFile(resultFile);
+                }
+            }
+            
+            testResult.DoneAddingResultFiles();
+            
             return testResult;
         }
 
@@ -147,6 +150,43 @@ namespace MSTestAllureAdapter
             return result;
         }
 
+        private ErrorInfo ParseErrorInfo(XElement errorInfoXmlElement)
+        {
+            XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(new NameTable());
+            xmlNamespaceManager.AddNamespace("prefix", ns.NamespaceName);
+
+            errorInfoXmlElement = errorInfoXmlElement.Element(ns + "Output");
+
+            XElement messageElement = errorInfoXmlElement.XPathSelectElement("prefix:ErrorInfo/prefix:Message", xmlNamespaceManager);
+
+            string message = (messageElement != null) ? messageElement.Value : null;
+
+            XElement stackTraceElement = errorInfoXmlElement.XPathSelectElement("prefix:ErrorInfo/prefix:StackTrace", xmlNamespaceManager);
+
+            string stackTrace = (stackTraceElement != null) ? stackTraceElement.Value : null;
+
+            XElement stdOutElement = errorInfoXmlElement.XPathSelectElement("prefix:StdOut", xmlNamespaceManager);
+
+            string stdOut = (stdOutElement != null) ? stdOutElement.Value : null;
+
+            return new ErrorInfo(message, stackTrace, stdOut);
+        }
+        
+        private string GetDeploymentRoot(XElement testSettingsElement)
+        {
+            string deploymentRoot = null;
+            
+            XElement deploymentElement = testSettingsElement.Element(ns + "Deployment");
+            
+            if (deploymentElement != null)
+            {
+                XAttribute runDeploymentRootAttribute = deploymentElement.Attribute("name");
+                deploymentRoot = runDeploymentRootAttribute.Value;
+            }
+            
+            return deploymentRoot;
+        }
+        
         private string GetOwner(XElement unitTestElement)
         {
             string owner = null;
@@ -175,6 +215,25 @@ namespace MSTestAllureAdapter
 
             return description;
         }
+
+        /// <summary>
+        /// Gets the name of the file.
+        /// </summary>
+        /// <returns>The file name.</returns>
+        /// <param name="fileName">File name.</param>
+        /// <remarks>
+        /// when running on linux the Path.PathSeparator is '/' and in the TRX its '\\'
+        /// so the Path.GetFileName won't behave as expected.
+        /// </remarks>
+        static string GetFileName(string fileName)
+        {
+            int num = fileName.LastIndexOfAny(new char[] { '\\' });
+            if (num >= 0)
+            {
+                fileName = fileName.Substring(num + 1);
+            }
+            return fileName;
+        }
+
     }
 }
-

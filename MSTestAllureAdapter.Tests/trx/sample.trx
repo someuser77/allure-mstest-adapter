@@ -6,7 +6,7 @@
       <AgentRule name="Execution Agents">
       </AgentRule>
     </Execution>
-    <Deployment runDeploymentRoot="chen_CHEN-5DA849B0B8 2014-10-27 15_44_14" />
+    <Deployment runDeploymentRoot="Attachments" />
   </TestSettings>
   <Times creation="2014-10-27T15:44:14.3773649+02:00" queuing="2014-10-27T15:44:14.4775089+02:00" start="2014-10-27T15:44:14.6377393+02:00" finish="2014-10-27T15:44:16.0697985+02:00" />
   <ResultSummary outcome="Failed">
@@ -131,8 +131,8 @@
         </TextMessages>
       </Output>
       <ResultFiles>
-        <ResultFile path="CHEN-5DA849B0B8\file.xxx" />
-        <ResultFile path="CHEN-5DA849B0B8\file.yyy" />
+        <ResultFile path="CHEN-5DA849B0B8\log.txt" />
+        <ResultFile path="CHEN-5DA849B0B8\apple-256266_640.jpg" />
       </ResultFiles>
     </UnitTestResult>
     <UnitTestResult executionId="4064c43c-a3b3-4d4e-840e-1a65d06c7c36" testId="1a397e66-843f-85e6-a2bc-c6770c860df9" testName="Test_Without_Category" computerName="CHEN-5DA849B0B8" duration="00:00:00.0003341" startTime="2014-10-27T15:44:15.4489057+02:00" endTime="2014-10-27T15:44:15.4489057+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4064c43c-a3b3-4d4e-840e-1a65d06c7c36">
@@ -184,7 +184,7 @@ System.DivideByZeroException: Attempted to divide by zero.</Message>
         </TextMessages>
       </Output>
       <ResultFiles>
-        <ResultFile path="CHEN-5DA849B0B8\file.xxx" />
+        <ResultFile path="CHEN-5DA849B0B8\log.txt" />
       </ResultFiles>
     </UnitTestResult>
     <UnitTestResult executionId="51182f7e-e019-46ec-aff6-1afc817012fa" testId="210c2f31-b992-c098-66ad-b7a3d86d420b" testName="TestMethod_With_Only_Missing_Result_File" computerName="CHEN-5DA849B0B8" duration="00:00:00.0036152" startTime="2014-10-27T15:44:15.7994097+02:00" endTime="2014-10-27T15:44:15.8294529+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="51182f7e-e019-46ec-aff6-1afc817012fa">
