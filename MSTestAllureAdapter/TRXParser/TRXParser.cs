@@ -20,6 +20,8 @@ namespace MSTestAllureAdapter.TestProviders
 
         private string mDeploymentRoot;
         
+        private string mTrxBaseDir;
+        
         /// <summary>
         /// Parses the test results from the supplied trx file.
         /// </summary>
@@ -27,6 +29,8 @@ namespace MSTestAllureAdapter.TestProviders
         /// <param name="filePath">File path to the trx file.</param>
         public IEnumerable<MSTestResult> GetTestResults(string filePath)
         {
+            mTrxBaseDir = Path.GetDirectoryName(filePath);
+            
             XDocument doc = XDocument.Load(filePath);
             
             XElement settings = doc.Root.Element(ns + "TestSettings").Element(ns + "Deployment");
@@ -116,7 +120,7 @@ namespace MSTestAllureAdapter.TestProviders
                             
                     // Path.Combine is used because the attachment is assumed to be accessed on the same
                     // platform the report was created on.
-                    string resultFile = Path.Combine(mDeploymentRoot, "Out", fileName);
+                    string resultFile = Path.Combine(mTrxBaseDir, mDeploymentRoot, "Out", fileName);
                     
                     testResult.AddResultFile(resultFile);
                 }
